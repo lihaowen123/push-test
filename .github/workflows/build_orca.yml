@@ -24,132 +24,132 @@ jobs:
       ver_pure:
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          lfs: 'true'
+      # - name: Checkout
+      #   uses: actions/checkout@v4
+      #   with:
+      #     lfs: 'true'
 
-      - name: load cached deps
-        uses: actions/cache@v4
-        with:
-          path: ${{ inputs.cache-path }}
-          key: ${{ inputs.cache-key }}
-          fail-on-cache-miss: true
+      # - name: load cached deps
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ${{ inputs.cache-path }}
+      #     key: ${{ inputs.cache-key }}
+      #     fail-on-cache-miss: true
 
-      - uses: lukka/get-cmake@latest
-        with:
-          cmakeVersion: "~3.28.0"  # use most recent 3.28.x version
+      # - uses: lukka/get-cmake@latest
+      #   with:
+      #     cmakeVersion: "~3.28.0"  # use most recent 3.28.x version
           
-      - name: Get the version and date on Ubuntu and macOS
-        if: inputs.os != 'windows-latest'
-        run: |
-          ver_pure=$(grep 'set(SoftFever_VERSION' version.inc | cut -d '"' -f2)
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            ver="PR-${{ github.event.number }}"
-          else
-            ver=V$ver_pure
-          fi
-          echo "ver=$ver" >> $GITHUB_ENV
-          echo "ver_pure=$ver_pure" >> $GITHUB_ENV
-          echo "date=$(date +'%Y%m%d')" >> $GITHUB_ENV
-        shell: bash
+      # - name: Get the version and date on Ubuntu and macOS
+      #   if: inputs.os != 'windows-latest'
+      #   run: |
+      #     ver_pure=$(grep 'set(SoftFever_VERSION' version.inc | cut -d '"' -f2)
+      #     if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+      #       ver="PR-${{ github.event.number }}"
+      #     else
+      #       ver=V$ver_pure
+      #     fi
+      #     echo "ver=$ver" >> $GITHUB_ENV
+      #     echo "ver_pure=$ver_pure" >> $GITHUB_ENV
+      #     echo "date=$(date +'%Y%m%d')" >> $GITHUB_ENV
+      #   shell: bash
 
-      - name: Get the version and date on Windows
-        if: inputs.os == 'windows-latest'
-        run: |
-          $date = Get-Date -Format 'yyyyMMdd'
-          $ref = "${{ github.ref }}"
-          $eventName = "${{ github.event_name }}"
-          $prNumber = "${{ github.event.number }}"
+#       - name: Get the version and date on Windows
+#         if: inputs.os == 'windows-latest'
+#         run: |
+#           $date = Get-Date -Format 'yyyyMMdd'
+#           $ref = "${{ github.ref }}"
+#           $eventName = "${{ github.event_name }}"
+#           $prNumber = "${{ github.event.number }}"
 
-          if ($eventName -eq 'pull_request') {
-              $ver = "PR" + $prNumber
-          } else {
-              $versionContent = Get-Content version.inc -Raw
-              if ($versionContent -match 'set\(SoftFever_VERSION "(.*?)"\)') {
-                  $ver = $matches[1]
-              }
-              $ver = "V$ver"
-          }
+#           if ($eventName -eq 'pull_request') {
+#               $ver = "PR" + $prNumber
+#           } else {
+#               $versionContent = Get-Content version.inc -Raw
+#               if ($versionContent -match 'set\(SoftFever_VERSION "(.*?)"\)') {
+#                   $ver = $matches[1]
+#               }
+#               $ver = "V$ver"
+#           }
 
-          echo "ver=$ver" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          echo "date=$date" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
-          echo "date: ${{ env.date }} version: ${{ env.ver }}"
-        shell: pwsh
+#           echo "ver=$ver" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+#           echo "date=$date" | Out-File -Append -FilePath $env:GITHUB_ENV -Encoding utf8
+#           echo "date: ${{ env.date }} version: ${{ env.ver }}"
+#         shell: pwsh
 
-#   Mac
-      - name: Install tools mac
-        if: inputs.os == 'macos-14'
-        run: |
-          brew install libtool
-          brew list
-          mkdir -p ${{ github.workspace }}/deps/build
+# #   Mac
+#       - name: Install tools mac
+#         if: inputs.os == 'macos-14'
+#         run: |
+#           brew install libtool
+#           brew list
+#           mkdir -p ${{ github.workspace }}/deps/build
 
-      - name: Free disk space
-        if: inputs.os == 'macos-14'
-        run: |
-          df -hI /dev/disk3s1s1
-          sudo find /Applications -maxdepth 1 -type d -name "Xcode_*.app" ! -name "Xcode_15.4.app" -exec rm -rf {} +
-          sudo rm -rf ~/Library/Developer/CoreSimulator/Caches/*
-          df -hI /dev/disk3s1s1
+#       - name: Free disk space
+#         if: inputs.os == 'macos-14'
+#         run: |
+#           df -hI /dev/disk3s1s1
+#           sudo find /Applications -maxdepth 1 -type d -name "Xcode_*.app" ! -name "Xcode_15.4.app" -exec rm -rf {} +
+#           sudo rm -rf ~/Library/Developer/CoreSimulator/Caches/*
+#           df -hI /dev/disk3s1s1
 
-      - name: Build slicer mac
-        if: inputs.os == 'macos-14'
-        working-directory: ${{ github.workspace }}
-        run: |
-          ./build_release_macos.sh -s -n -x -a universal -t 10.15 -1
+#       - name: Build slicer mac
+#         if: inputs.os == 'macos-14'
+#         working-directory: ${{ github.workspace }}
+#         run: |
+#           ./build_release_macos.sh -s -n -x -a universal -t 10.15 -1
 
- # Thanks to RaySajuuk, it's working now
-      - name: Sign app and notary
-        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) && inputs.os == 'macos-14'
-        working-directory: ${{ github.workspace }}
-        env:
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-          CERTIFICATE_ID: ${{ secrets.MACOS_CERTIFICATE_ID }}
-        run: |
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
-          security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
-          security import $CERTIFICATE_PATH -P $P12_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $P12_PASSWORD $KEYCHAIN_PATH
-          codesign --deep --force --verbose --options runtime --timestamp --entitlements ${{ github.workspace }}/scripts/disable_validation.entitlements --sign "$CERTIFICATE_ID" ${{ github.workspace }}/build/universal/OrcaSlicer/OrcaSlicer.app
-          ln -s /Applications ${{ github.workspace }}/build/universal/OrcaSlicer/Applications
-          hdiutil create -volname "OrcaSlicer" -srcfolder ${{ github.workspace }}/build/universal/OrcaSlicer -ov -format UDZO OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
-          codesign --deep --force --verbose --options runtime --timestamp --entitlements ${{ github.workspace }}/scripts/disable_validation.entitlements --sign "$CERTIFICATE_ID" OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
-          xcrun notarytool store-credentials "notarytool-profile" --apple-id "${{ secrets.APPLE_DEV_ACCOUNT }}" --team-id "${{ secrets.TEAM_ID }}" --password "${{ secrets.APP_PWD }}"
-          xcrun notarytool submit "OrcaSlicer_Mac_universal_${{ env.ver }}.dmg" --keychain-profile "notarytool-profile" --wait
-          xcrun stapler staple OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#  # Thanks to RaySajuuk, it's working now
+#       - name: Sign app and notary
+#         if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) && inputs.os == 'macos-14'
+#         working-directory: ${{ github.workspace }}
+#         env:
+#           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+#           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+#           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+#           CERTIFICATE_ID: ${{ secrets.MACOS_CERTIFICATE_ID }}
+#         run: |
+#           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+#           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+#           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode --output $CERTIFICATE_PATH
+#           security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
+#           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+#           security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN_PATH
+#           security import $CERTIFICATE_PATH -P $P12_PASSWORD -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+#           security list-keychain -d user -s $KEYCHAIN_PATH
+#           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $P12_PASSWORD $KEYCHAIN_PATH
+#           codesign --deep --force --verbose --options runtime --timestamp --entitlements ${{ github.workspace }}/scripts/disable_validation.entitlements --sign "$CERTIFICATE_ID" ${{ github.workspace }}/build/universal/OrcaSlicer/OrcaSlicer.app
+#           ln -s /Applications ${{ github.workspace }}/build/universal/OrcaSlicer/Applications
+#           hdiutil create -volname "OrcaSlicer" -srcfolder ${{ github.workspace }}/build/universal/OrcaSlicer -ov -format UDZO OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#           codesign --deep --force --verbose --options runtime --timestamp --entitlements ${{ github.workspace }}/scripts/disable_validation.entitlements --sign "$CERTIFICATE_ID" OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#           xcrun notarytool store-credentials "notarytool-profile" --apple-id "${{ secrets.APPLE_DEV_ACCOUNT }}" --team-id "${{ secrets.TEAM_ID }}" --password "${{ secrets.APP_PWD }}"
+#           xcrun notarytool submit "OrcaSlicer_Mac_universal_${{ env.ver }}.dmg" --keychain-profile "notarytool-profile" --wait
+#           xcrun stapler staple OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
 
-      - name: Create DMG without notary
-        if: github.ref != 'refs/heads/main' && inputs.os == 'macos-14'
-        working-directory: ${{ github.workspace }}
-        run: |
-          ln -s /Applications ${{ github.workspace }}/build/universal/OrcaSlicer/Applications
-          hdiutil create -volname "OrcaSlicer" -srcfolder ${{ github.workspace }}/build/universal/OrcaSlicer -ov -format UDZO OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#       - name: Create DMG without notary
+#         if: github.ref != 'refs/heads/main' && inputs.os == 'macos-14'
+#         working-directory: ${{ github.workspace }}
+#         run: |
+#           ln -s /Applications ${{ github.workspace }}/build/universal/OrcaSlicer/Applications
+#           hdiutil create -volname "OrcaSlicer" -srcfolder ${{ github.workspace }}/build/universal/OrcaSlicer -ov -format UDZO OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
 
-      - name: Upload artifacts mac
-        if: inputs.os == 'macos-14'
-        uses: actions/upload-artifact@v4
-        with:
-          name: OrcaSlicer_Mac_universal_${{ env.ver }}
-          path: ${{ github.workspace }}/OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#       - name: Upload artifacts mac
+#         if: inputs.os == 'macos-14'
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: OrcaSlicer_Mac_universal_${{ env.ver }}
+#           path: ${{ github.workspace }}/OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
 
-      - name: Deploy Mac release
-        if: github.ref == 'refs/heads/main' && inputs.os == 'macos-14'
-        uses: WebFreak001/deploy-nightly@v3.2.0
-        with:
-          upload_url: https://uploads.github.com/repos/lihaowen123/push-test/releases/213055499/assets{?name,label}
-          release_id: 213055499
-          asset_path: ${{ github.workspace }}/OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
-          asset_name: OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
-          asset_content_type: application/octet-stream
-          max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
+#       - name: Deploy Mac release
+#         if: github.ref == 'refs/heads/main' && inputs.os == 'macos-14'
+#         uses: WebFreak001/deploy-nightly@v3.2.0
+#         with:
+#           upload_url: https://uploads.github.com/repos/lihaowen123/push-test/releases/213055499/assets{?name,label}
+#           release_id: 213055499
+#           asset_path: ${{ github.workspace }}/OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#           asset_name: OrcaSlicer_Mac_universal_${{ env.ver }}.dmg
+#           asset_content_type: application/octet-stream
+#           max_releases: 1 # optional, if there are more releases than this matching the asset_name, the oldest ones are going to be deleted
 
 # Windows
       - name: setup MSVC
