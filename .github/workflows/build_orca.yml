@@ -176,7 +176,10 @@ jobs:
         env:
           WindowsSdkDir: 'C:\Program Files (x86)\Windows Kits\10\'
           WindowsSDKVersion: '10.0.22000.0\'
-        run: .\build.bat
+        run: 
+          echo current dir:%cd%
+          dir /b
+          .\build.bat
 
       # - name: Create installer Win
       #   if: inputs.os == 'windows-latest'
