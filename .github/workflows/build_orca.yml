@@ -162,63 +162,71 @@ jobs:
           dir "C:/Program Files (x86)/Windows Kits/10/Include"
           choco install nsis
 
+      # - name: Build slicer Win
+      #   if: inputs.os == 'windows-latest'
+      #   working-directory: ${{ github.workspace }}
+      #   env:
+      #     WindowsSdkDir: 'C:\Program Files (x86)\Windows Kits\10\'
+      #     WindowsSDKVersion: '10.0.22000.0\'
+      #   run: .\build_release_vs2022.bat slicer
+
       - name: Build slicer Win
         if: inputs.os == 'windows-latest'
         working-directory: ${{ github.workspace }}
         env:
           WindowsSdkDir: 'C:\Program Files (x86)\Windows Kits\10\'
           WindowsSDKVersion: '10.0.22000.0\'
-        run: .\build_release_vs2022.bat slicer
+        run: .\build.bat
 
-      - name: Create installer Win
-        if: inputs.os == 'windows-latest'
-        working-directory: ${{ github.workspace }}/build
-        run: |
-          cpack -G NSIS
+      # - name: Create installer Win
+      #   if: inputs.os == 'windows-latest'
+      #   working-directory: ${{ github.workspace }}/build
+      #   run: |
+      #     cpack -G NSIS
 
-      - name: Pack app
-        if: inputs.os == 'windows-latest'
-        working-directory: ${{ github.workspace }}/build
-        shell: cmd
-        run: '"C:/Program Files/7-Zip/7z.exe" a -tzip OrcaSlicer_Windows_${{ env.ver }}_portable.zip ${{ github.workspace }}/build/OrcaSlicer'
+      # - name: Pack app
+      #   if: inputs.os == 'windows-latest'
+      #   working-directory: ${{ github.workspace }}/build
+      #   shell: cmd
+      #   run: '"C:/Program Files/7-Zip/7z.exe" a -tzip OrcaSlicer_Windows_${{ env.ver }}_portable.zip ${{ github.workspace }}/build/OrcaSlicer'
 
-      - name: Pack PDB
-        if: inputs.os == 'windows-latest'
-        working-directory: ${{ github.workspace }}/build/src/Release
-        shell: cmd
-        run: '"C:/Program Files/7-Zip/7z.exe" a -m0=lzma2 -mx9 Debug_PDB_${{ env.ver }}_for_developers_only.7z  *.pdb'
+      # - name: Pack PDB
+      #   if: inputs.os == 'windows-latest'
+      #   working-directory: ${{ github.workspace }}/build/src/Release
+      #   shell: cmd
+      #   run: '"C:/Program Files/7-Zip/7z.exe" a -m0=lzma2 -mx9 Debug_PDB_${{ env.ver }}_for_developers_only.7z  *.pdb'
 
-      - name: Upload artifacts Win zip
-        if: inputs.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: OrcaSlicer_Windows_${{ env.ver }}_portable
-          path: ${{ github.workspace }}/build/OrcaSlicer
+      # - name: Upload artifacts Win zip
+      #   if: inputs.os == 'windows-latest'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: OrcaSlicer_Windows_${{ env.ver }}_portable
+      #     path: ${{ github.workspace }}/build/OrcaSlicer
 
-      - name: Upload artifacts Win installer
-        if: inputs.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: OrcaSlicer_Windows_${{ env.ver }}
-          path: ${{ github.workspace }}/build/OrcaSlicer*.exe
+      # - name: Upload artifacts Win installer
+      #   if: inputs.os == 'windows-latest'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: OrcaSlicer_Windows_${{ env.ver }}
+      #     path: ${{ github.workspace }}/build/OrcaSlicer*.exe
 
-      - name: Upload artifacts Win PDB
-        if: inputs.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: PDB
-          path: ${{ github.workspace }}/build/src/Release/Debug_PDB_${{ env.ver }}_for_developers_only.7z
+      # - name: Upload artifacts Win PDB
+      #   if: inputs.os == 'windows-latest'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: PDB
+      #     path: ${{ github.workspace }}/build/src/Release/Debug_PDB_${{ env.ver }}_for_developers_only.7z
 
-      - name: Deploy Windows release portable
-        if: github.ref == 'refs/heads/main' && inputs.os == 'windows-latest'
-        uses: WebFreak001/deploy-nightly@v3.2.0
-        with:
-          upload_url: https://uploads.github.com/repos/lihaowen123/push-test/releases/213055499/assets{?name,label}
-          release_id: 213055499
-          asset_path: ${{ github.workspace }}/build/OrcaSlicer_Windows_${{ env.ver }}_portable.zip
-          asset_name: OrcaSlicer_Windows_${{ env.ver }}_portable.zip
-          asset_content_type: application/x-zip-compressed
-          max_releases: 1
+      # - name: Deploy Windows release portable
+      #   if: github.ref == 'refs/heads/main' && inputs.os == 'windows-latest'
+      #   uses: WebFreak001/deploy-nightly@v3.2.0
+      #   with:
+      #     upload_url: https://uploads.github.com/repos/lihaowen123/push-test/releases/213055499/assets{?name,label}
+      #     release_id: 213055499
+      #     asset_path: ${{ github.workspace }}/build/OrcaSlicer_Windows_${{ env.ver }}_portable.zip
+      #     asset_name: OrcaSlicer_Windows_${{ env.ver }}_portable.zip
+      #     asset_content_type: application/x-zip-compressed
+      #     max_releases: 1
 
       - name: Deploy Windows release installer
         if: github.ref == 'refs/heads/main' && inputs.os == 'windows-latest'
@@ -226,8 +234,8 @@ jobs:
         with:
           upload_url: https://uploads.github.com/repos/lihaowen123/push-test/releases/213055499/assets{?name,label}
           release_id: 213055499
-          asset_path: ${{ github.workspace }}/build/OrcaSlicer_Windows_Installer_${{ env.ver }}.exe
-          asset_name: OrcaSlicer_Windows_Installer_${{ env.ver }}.exe
+          asset_path: ${{ github.workspace }}/build/Debug/hello_world.exe
+          asset_name: hello_world.exe
           asset_content_type: application/x-msdownload
           max_releases: 1
 
