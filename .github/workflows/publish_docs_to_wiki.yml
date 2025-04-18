@@ -38,7 +38,8 @@ jobs:
       # 4. Synchronize differences between `doc` & `tmp_wiki`
       # 5. Push new Wiki content
       - name: Push main repo content to wiki
-        run: |
+        run: echo publish
+          # |
           # rsync -av --delete doc/ tmp_wiki/ --exclude .git
           # cd tmp_wiki
           # git add .
