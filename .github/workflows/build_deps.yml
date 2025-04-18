@@ -23,7 +23,8 @@ on:
 jobs:
   build_deps:
     name: Build Deps
-    if: inputs.build-deps-only || inputs.valid-cache != true
+    if: true
+    # if: inputs.build-deps-only || inputs.valid-cache != true
     runs-on: ${{ inputs.os }}
     env:
       date:
@@ -77,6 +78,7 @@ jobs:
             brew install automake texinfo libtool
             brew list
             brew uninstall --ignore-dependencies zstd
+            chmod +x ./build_release_macos.sh
             ./build_release_macos.sh -dx -a universal -t 10.15 -1
             for arch in arm64 x86_64; do
                 (cd "${{ github.workspace }}/deps/build/${arch}" && \
